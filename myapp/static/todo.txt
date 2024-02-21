@@ -1,0 +1,7 @@
+- add dark gold color to every .css file
+- adding tags
+- replace delete button on category with some other function, like maybe a + that will create a new expense or income with that category, .. ......
+- border na loginu i registeru stavit da postoji i kad nije fokusiran
+- unit testovi
+- zamijenit edit POST sa PUT
+- obrisati importe koje ne koristimo i umjesto * koristiti tocno sto koristimo

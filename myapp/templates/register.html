@@ -1,8 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Register{% endblock %}
+
+{% load static %}
+
 {% block content %}
-  <h2>Register</h2>
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Sign Up</button>
-  </form>
+<head>
+    <link rel="stylesheet" type="text/css" href="{% static 'register.css' %}">
+</head>
+<body>
+    <div class='container'>
+        <div class='sidebar'>
+            <p>Register</p>
+        </div>
+        <div class='dashboard'>
+            <form class='form' method="post">
+                {% csrf_token %}
+                {{ form.non_field_errors }}
+                <p>
+                    <label for="id_username">Username:</label><br>
+                    {{ form.username }}
+                    {{ form.username.errors }}
+                </p>
+                <p>
+                    <label for="id_password1">Password:</label><br>
+                    {{ form.password1 }}
+                    {{ form.password1.errors }}
+
+                </p>
+                <p>
+                    <label for="id_password2">Confirm Password:</label><br>
+                    {{ form.password2 }}
+                    {{ form.password2.errors }}
+                </p>
+                <button type="submit">
+                    <div class='svg_wrapper'>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right" viewBox="0 0 16 16" stroke="currentColor" stroke-width="2">
+                            <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8"/>
+                        </svg>
+                    </div>
+                    <span>Register</span>
+                </button>
+            </form>
+          
+            <p class='redirect'>Already have an account? <a href="{% url 'login' %}">Log In</a></p>
+        </div>
+        <div class='sidebar_right'>
+
+        </div>
+
+        <button class='back_button' onclick="location.href='{% url 'home' %}'">
+            <i class="bi bi-chevron-double-left"></i>
+        </button>
+    </div>
+</body>
 {% endblock %}

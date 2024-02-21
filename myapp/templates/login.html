@@ -1,14 +1,49 @@
 {% extends "base.html" %}
 
-{% block title %}Login{% endblock %}
+{% block title %}Log In{% endblock %}
+
+{% load static %}
 
 {% block content %}
-<h2>Log In</h2>
-<form method="post">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">Log In</button>
-</form>
+<head>
+    <link rel="stylesheet" type="text/css" href="{% static 'login.css' %}">
+    <script src={% static 'login.js' %}></script>
+</head>
+<body>
+    <div class='container'>
+        <div class='sidebar'>
+            <p class='load_sidebar_text2'>Log In</p>
+        </div>
+        <div class='dashboard'>
+            <form class='form' method="post">
+                {% csrf_token %}
+                <p>
+                    <label for="id_username">Username:</label><br>
+                    {{ form.username }}
+                </p>
+                <p>
+                    <label for="id_password">Password:</label><br>
+                    {{ form.password }}
+                </p>
+                <button type="submit">
+                    <div class='svg_wrapper'>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right" viewBox="0 0 16 16" stroke="currentColor" stroke-width="2">
+                            <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8"/>
+                        </svg>
+                    </div>
+                    <span>Log In</span>
+                </button>
+            </form>
+          
+            <p class='redirect'>Don't have an account? <a href="{% url 'register' %}">Register</a></p>
+        </div>
+        <div class='sidebar_right'>
 
-<p>or <a href="{% url 'register' %}">Register</a></p>
+        </div>
+
+        <button class='back_button' onclick="location.href='{% url 'home' %}'">
+            <i class="bi bi-chevron-double-left"></i>
+        </button>
+    </div>
+</body>
 {% endblock %}

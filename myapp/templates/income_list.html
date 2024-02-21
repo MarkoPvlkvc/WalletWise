@@ -1,0 +1,431 @@
+{% extends "base.html" %}
+
+{% block title %}Incomes{% endblock %}
+
+{% load static %}
+
+{% block content %}
+<head>
+    <link rel="stylesheet" type="text/css" href="{% static 'home.css' %}">
+</head>
+<body>
+    <div class='container'>
+        <div class='sidebar'>
+            <img class='icon' src="{% static 'icon.png' %}">
+
+            <button onclick="location.href='{% url 'home' %}'"><i class="bi bi-house"></i>Home</button>
+            <button onclick="location.href='{% url 'categories' %}'"><i class="bi bi-collection"></i>Categories</button>
+            <button onclick="location.href='{% url 'tags' %}'"><i class="bi bi-tags"></i>Tags</button>
+            <button onclick="location.href='{% url 'expenses' %}'"><i class="bi bi-caret-down"></i>Expenses</button>
+            <button onclick="location.href='{% url 'incomes' %}'" class='active'><i class="bi bi-caret-up-fill"></i>Incomes</button>
+
+            <div class='user'>
+                {% if user.is_authenticated %}
+                <p>Hi {{ user.username|capfirst }}!</p>
+                <button onclick="location.href='{% url 'logout' %}'">Logout</button>
+                {% else %}
+                <p>You are not logged in. </p>
+                <button onclick="location.href='{% url 'login' %}'">Log In</button>
+                {% endif %}
+            </div>
+        </div>
+        <div class='dashboard'>
+            <div>
+                <span class='title'>Incomes</span>
+                <span class='subtitle'> | total: {{ incomes|length }}</span>
+
+                {% if user.is_authenticated %}
+                <button class='add_new_button' onclick="AddNewClick()">
+                    <i class="bi bi-plus"></i>
+                    <span>Add</span>
+                </button>
+                {% endif %}
+            </div>
+            
+            <div class='item_container'>
+                {% for i in incomes %}
+                <div class='item'
+                    data-id='{{ i.id }}'
+                    data-source='{{ i.source }}'
+                    data-date='{{ i.date }}'
+                    data-amount='{{ i.amount }}'>
+                    <span class='item_index'>{{ forloop.counter }}</span>
+                    <i class="bi bi-caret-up-fill item_icon" style='background-color: var(--white-gray); color: var(--green);'></i>
+                    <div>
+                        <span class='item_title'>{{ i.source|capfirst }}</span><br>
+                    </div>
+                    <span class='item_count'>{{ i.date|date:"d/m/Y" }}<span> | date</span></span>
+                    <span class='item_sum'>{{ i.amount }} €<span> | amount</span></span>
+                    <div style='justify-self: right;'>
+                        <button class='item_edit' onclick='EditClick(this)' style='margin: 10px 10px 10px 0;'>
+                            <i class="bi bi-pencil-fill"></i>
+                        </button>
+                        <button class='item_delete' onclick='DeleteClick(this)'>
+                          <i class="bi bi-trash3-fill"></i>
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div id='add_new_container' class='item_dialog_container'>
+                <div id='add_new_form_container' class='item_dialog_form_container'>
+                    <button class='item_dialog_close' onclick='AddNewCloseClick()'><i class="bi bi-x"></i></button>
+                    <p class='item_dialog_title'>New Income</p>
+                    <form id='add_new_form' method="post">
+                        {% csrf_token %}
+                        <div style='grid-column: span 2;'>
+                            <label class='item_dialog_label'>Source:</label><br>
+                            {{ form.source }}
+                        </div>
+                        <div>
+                            <label class='item_dialog_label'>Amount:</label><br>
+                            {{ form.amount }}
+                        </div>
+                        <div>
+                            <label class='item_dialog_label'>Date:</label><br>
+                            {{ form.date }}
+                        </div>
+                        <button type="submit" class='item_dialog_submit' style='grid-column: span 2; margin-top: 20px;'><i class="bi bi-plus"></i>Add</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class='confirm_delete_container'>
+                <div class='confirm_delete_form'>
+                    <button class='item_dialog_close' style='grid-column: 1;' onclick='DeleteCloseClick()'><i class="bi bi-x"></i></button>
+                    <i class="bi bi-trash3-fill"></i>
+                    <p class='item_dialog_title' style='margin: 0;'>Are you sure?</p>
+                    <p class='confirm_delete_form_description'>Do you really want to delete this income?<br>This process can't be undone.</p>
+                    <div>
+                        <button class='confirm_delete_form_cancel' onclick='DeleteCloseClick()'>Cancel</button>
+                        <button class='confirm_delete_form_delete'>Delete</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id='edit_container' class='item_dialog_container'>
+                <div id='edit_form_container' class='item_dialog_form_container'>
+                    <button class='item_dialog_close' onclick='EditCloseClick()'><i class="bi bi-x"></i></button>
+                    <p class='item_dialog_title'>Edit Expense</p>
+                    <form id='edit_form' method="post">
+                        {% csrf_token %}
+                        <div style='grid-column: span 2;'>
+                            <label class='item_dialog_label'>Source:</label><br>
+                            {{ form.source }}
+                        </div>
+                        <div>
+                            <label class='item_dialog_label'>Amount:</label><br>
+                            {{ form.amount }}
+                        </div>
+                        <div>
+                            <label class='item_dialog_label'>Date:</label><br>
+                            {{ form.date }}
+                        </div>
+                        <button type="submit" class='item_dialog_submit' style='grid-column: span 2; margin-top: 20px;'><i class="bi bi-pencil-square" style='font-size: 15px;'></i>Confirm</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+
+    <script>
+        function AddNewClick() {
+            document.getElementById('add_new_form').reset();
+            document.getElementById('add_new_container').style.display = 'flex';
+            document.getElementById('add_new_form_container').style.scale = '1.02';
+            document.querySelector('.dashboard').style.scale = '0.98';
+        }
+
+        function AddNewCloseClick() {
+            document.getElementById('add_new_container').style.display = 'none';
+            document.getElementById('add_new_form_container').style.scale = '1';
+            document.querySelector('.dashboard').style.scale = '1';
+        }
+
+        function DeleteClick(button) {
+            document.querySelector('.confirm_delete_container').style.display = 'flex';
+            document.querySelector('.confirm_delete_form').style.scale = '1.02';
+            document.querySelector('.dashboard').style.scale = '0.98';
+
+            const item = button.closest('.item');
+            const itemId = item.dataset.id;
+
+            document.querySelector('.confirm_delete_form_delete').dataset.id = itemId;
+        }
+
+        function DeleteCloseClick() {
+            document.querySelector('.confirm_delete_container').style.display = 'none';
+            document.querySelector('.confirm_delete_form').style.scale = '1';
+            document.querySelector('.dashboard').style.scale = '1';
+        }
+
+        function EditClick(button) {
+            document.getElementById('edit_container').style.display = 'flex';
+            document.getElementById('edit_form_container').style.scale = '1.02';
+            document.querySelector('.dashboard').style.scale = '0.98';
+
+            const item = button.closest('.item');
+            const itemId = item.dataset.id;
+            const itemSource = item.dataset.source;
+            const itemDate = item.dataset.date;
+            const itemAmount = item.dataset.amount;
+
+            document.getElementById('edit_form').dataset.id = itemId;
+
+            var formattedSource = itemSource.charAt(0).toUpperCase() + itemSource.slice(1);
+            document.querySelector('#edit_form input[name="source"]').value = itemSource;
+
+            document.querySelector('#edit_form input[name="amount"]').value = itemAmount;
+
+            var formattedDate = moment(itemDate, "MMM. DD, YYYY, h:mm a").format("YYYY-MM-DD");
+            document.querySelector('#edit_form input[name="date"]').value = formattedDate;            
+        }
+
+        function EditCloseClick() {
+            document.getElementById('edit_container').style.display = 'none';
+            document.getElementById('edit_form_container').style.scale = '1';
+            document.querySelector('.dashboard').style.scale = '1';
+        }
+
+        function AddItem(event) {
+            event.preventDefault(); // Prevent the form from submitting the traditional way
+          
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            var formData = new FormData(this); // Create a FormData object from the form
+
+            // Create JSON data object
+            var jsonData = {
+                csrfmiddlewaretoken: csrftoken,
+                amount: formData.get('amount'),
+                source: formData.get('source'),
+                date: formData.get('date')
+            };
+          
+            fetch('/incomes/add/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrftoken,
+                },
+                body: JSON.stringify(jsonData)
+            })
+            .then(response => {
+                if (response.ok) {
+                    if(response.status === 201){
+                        response.json().then(data => {
+                            console.log('Form submitted successfully. New expense Id:', data.id);
+                            AddNewCloseClick();
+    
+                            // Extract data from the form
+                            var source = formData.get('source');
+                            var amount = formData.get('amount');
+                            var date = formData.get('date');
+    
+                            date = date.split('-');
+                            date = `${date[2]}/${date[1]}/${date[0]}`;
+                            amount = parseFloat(amount).toFixed(2);
+    
+                            // Create a new item element
+                            const newItem = document.createElement('div');
+                            newItem.classList.add('item');
+
+                            newItem.dataset.id = data.id;
+                            newItem.dataset.source = source;
+
+                            var formattedDate = moment(data.date).format('MMM. D, YYYY, h:mm a');
+                            newItem.dataset.date = formattedDate;
+                            
+                            newItem.dataset.amount = amount;
+    
+                            newItem.innerHTML = `
+                                <span class='item_index'>New</span>
+                                <i class="bi bi-caret-up-fill item_icon" style='background-color: var(--white-gray); color: var(--green);'></i>
+                                <div>
+                                <span class='item_title'>${source.charAt(0).toUpperCase() + source.slice(1)}</span><br>
+                                </div>
+                                <span class='item_count'>${date}<span> | date</span></span>
+                                <span class='item_sum'>${amount} €<span> | amount</span></span>
+                                <div style='justify-self: right;'>
+                                <button class='item_edit' onclick='EditClick(this)' style='margin: 10px 10px 10px 0;'>
+                                    <i class="bi bi-pencil-fill"></i>
+                                </button>
+                                <button class='item_delete' onclick='DeleteClick(this)'>
+                                    <i class="bi bi-trash3-fill"></i>
+                                </button>
+                                </div>
+                            `;
+    
+                            // Append the new item to the container
+                            const itemContainer = document.querySelector('.item_container');
+
+                            itemContainer.prepend(newItem);
+                        
+                            const subtitle = document.querySelector('.subtitle');
+                            var subtitleText = subtitle.innerText.split(' ');
+                            var subtitleNumber = parseInt(subtitleText.pop(), 10);
+                            subtitleNumber++;
+                            subtitle.innerText = ` | total: ${subtitleNumber}`;
+                        });
+                    } else if (response.status === 204) {
+                        console.log('No content');
+                    }
+                } else {
+                    throw new Error('Form submission failed');
+                }
+            })
+            .catch(error => {
+                console.error('Error submitting form:', error);
+            });
+        }
+
+        function DeleteItem(event) {
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            var itemId = event.currentTarget.dataset.id;
+            var item = document.querySelector(`.item[data-id="${itemId}"]`);
+
+            fetch(`/incomes/delete/${itemId}/`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrftoken,
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log('Expense deleted successfully.');
+                        
+                    item.parentNode.removeChild(item);
+        
+                    DeleteCloseClick();
+
+                    const subtitle = document.querySelector('.subtitle');
+                    var subtitleText = subtitle.innerText.split(' ');
+                    var subtitleNumber = parseInt(subtitleText.pop(), 10);
+                    subtitleNumber--;
+                    subtitle.innerText = ` | total: ${subtitleNumber}`;
+                } else {
+                    console.error('Failed to delete expense.');
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting expense: ', error);
+            });
+        }
+
+        function UpdateItem(event) {
+            event.preventDefault();
+
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            var formData = new FormData(event.currentTarget);
+            var itemId = event.currentTarget.dataset.id;
+
+            // Create JSON data object
+            var jsonData = {
+                csrfmiddlewaretoken: csrftoken,
+                amount: formData.get('amount'),
+                source: formData.get('source'),
+                date: formData.get('date')
+            };
+
+            fetch(`/incomes/update/${itemId}/`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrftoken,
+                },
+                body: JSON.stringify(jsonData)
+            })
+            .then(response => {
+                if (response.ok) {
+                    if(response.status === 200){
+                        response.json().then(data => {
+
+                            console.log('Update form submitted successfully.');
+                            EditCloseClick();
+    
+                            // Extract data from the form
+                            var source = formData.get('source');
+                            var amount = formData.get('amount');
+                            var date = formData.get('date');
+    
+                            date = date.split('-');
+                            date = `${date[2]}/${date[1]}/${date[0]}`;
+                            amount = parseFloat(amount).toFixed(2);
+    
+                            // Get existing item element
+                            const existingItem = document.querySelector(`.item[data-id="${itemId}"]`);
+    
+                            if (existingItem) {
+                                // Update dataset values if user wants to edit without refreshing
+                                existingItem.dataset.source = source;
+
+                                var formattedDate = moment(data.date).format('MMM. D, YYYY, h:mm a');
+                                existingItem.dataset.date = formattedDate;
+                                
+                                existingItem.dataset.amount = amount;
+
+                                existingItem.innerHTML = `
+                                    <span class='item_index'>${existingItem.querySelector('.item_index').innerText}</span>
+                                    <i class="bi bi-caret-up-fill item_icon" style='background-color: var(--white-gray); color: var(--green);'></i>
+                                    <div>
+                                    <span class='item_title'>${source.charAt(0).toUpperCase() + source.slice(1)}</span><br>
+                                    </div>
+                                    <span class='item_count'>${date}<span> | date</span></span>
+                                    <span class='item_sum'>${amount} €<span> | amount</span></span>
+                                    <div style='justify-self: right;'>
+                                    <button class='item_edit' onclick='EditClick(this)' style='margin: 10px 10px 10px 0;'>
+                                        <i class="bi bi-pencil-fill"></i>
+                                    </button>
+                                    <button class='item_delete' onclick='DeleteClick(this)'>
+                                        <i class="bi bi-trash3-fill"></i>
+                                    </button>
+                                    </div>
+                                `;
+                            }
+                        });
+                    } else if (response.status === 204) {
+                        console.log('No content');
+                    }
+                } else {
+                    throw new Error('Form submission failed');
+                }
+            })
+            .catch(error => {
+                console.error('Error submitting form:', error);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('add_new_form').addEventListener('submit', AddItem);
+
+            document.querySelector('.confirm_delete_form_delete').addEventListener('click', DeleteItem);
+            
+            document.getElementById('edit_form').addEventListener('submit', UpdateItem);
+
+            document.getElementById('add_new_container').addEventListener('click', function(event) {
+                if (event.target === this) {
+                    AddNewCloseClick();
+                }
+            });
+
+            document.querySelector('.confirm_delete_container').addEventListener('click', function(event) {
+                if (event.target === this) {
+                    DeleteCloseClick();
+                }
+            });
+
+            document.getElementById('edit_container').addEventListener('click', function(event) {
+                if (event.target === this) {
+                    EditCloseClick();
+                }
+            });
+        });
+    </script>
+</body>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Categories{% endblock %}
+
+{% load static %}
+
+{% block content %}
+<head>
+    <link rel="stylesheet" type="text/css" href="{% static 'home.css' %}">
+</head>
+<body>
+    <div class='container'>
+        <div class='sidebar'>
+            <img class='icon' src="{% static 'icon.png' %}">
+
+            <button onclick="location.href='{% url 'home' %}'"><i class="bi bi-house"></i>Home</button>
+            <button onclick="location.href='{% url 'categories' %}'" class='active'><i class="bi bi-collection-fill"></i>Categories</button>
+            <button onclick="location.href='{% url 'tags' %}'"><i class="bi bi-tags"></i>Tags</button>
+            <button onclick="location.href='{% url 'expenses' %}'"><i class="bi bi-caret-down"></i>Expenses</button>
+            <button onclick="location.href='{% url 'incomes' %}'"><i class="bi bi-caret-up"></i>Incomes</button>
+
+            <div class='user'>
+                {% if user.is_authenticated %}
+                <p>Hi {{ user.username|capfirst }}!</p>
+                <button onclick="location.href='{% url 'logout' %}'">Logout</button>
+                {% else %}
+                <p>You are not logged in. </p>
+                <button onclick="location.href='{% url 'login' %}'">Log In</button>
+                {% endif %}
+            </div>
+        </div>
+        <div class='dashboard'>
+            <div>
+                <span class='title'>Categories</span>
+                <span class='subtitle'> | total: {{ categories|length }}</span>
+            </div>
+            
+            <div class='item_container'>
+                {% for c in categories %}
+                <div class='item'>
+                    <span class='item_index'>{{ forloop.counter }}</span>
+                    <i class="bi bi-{{ c.icon }} item_icon"></i>
+                    <div>
+                        <span class='item_title'>{{ c.name }}</span><br>
+                        <p class='item_description'>{{ c.description }}</p>
+                    </div>
+                    <span class='item_count'>{{ c.expense_count }}<span> | count</span></span>
+                    <span class='item_sum'>{{ c.expense_sum|floatformat:2 }} €<span> | total</span></span>
+                    <button class='item_delete' style='pointer-events: none; opacity: 0.5;'>
+                      <i class="bi bi-trash3-fill"></i>
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</body>
+{% endblock %}

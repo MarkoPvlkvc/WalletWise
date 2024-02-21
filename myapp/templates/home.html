@@ -2,12 +2,149 @@
 
 {% block title %}Home{% endblock %}
 
+{% load static %}
+
 {% block content %}
-{% if user.is_authenticated %}
-  Hi {{ user.username }}!
-  <a href="{% url 'logout' %}">Log Out</a>
-{% else %}
-  <p>You are not logged in</p>
-  <a href="{% url 'login' %}">Log In</a>
-{% endif %}
+<head>
+    <link rel="stylesheet" type="text/css" href="{% static 'home.css' %}">
+</head>
+<body>
+    <div class='container'>
+        <div class='sidebar'>
+            <img class='icon' src="{% static 'icon.png' %}">
+
+            <button onclick="location.href='{% url 'home' %}'" class='active'><i class="bi bi-house-fill"></i>Home</button>
+            <button onclick="location.href='{% url 'categories' %}'"><i class="bi bi-collection"></i>Categories</button>
+            <button onclick="location.href='{% url 'tags' %}'"><i class="bi bi-tags"></i>Tags</button>
+            <button onclick="location.href='{% url 'expenses' %}'"><i class="bi bi-caret-down"></i>Expenses</button>
+            <button onclick="location.href='{% url 'incomes' %}'"><i class="bi bi-caret-up"></i>Incomes</button>
+
+            <div class='user'>
+                {% if user.is_authenticated %}
+                <p>Hi {{ user.username|capfirst }}!</p>
+                <button onclick="location.href='{% url 'logout' %}'">Logout</button>
+                {% else %}
+                <p>You are not logged in. </p>
+                <button onclick="location.href='{% url 'login' %}'">Log In</button>
+                {% endif %}
+            </div>
+        </div>
+        <div class='dashboard'>
+            <span class='title' style='user-select: none;'>Home</span>
+            
+            <div class='home_container'>
+                <div class='home_container_left'>
+                    <div class='balance_container home_tile' style='animation-duration: 0.4s;'>
+                        <p class='balance_title'>Balance</p>
+                        <div class='circle_progress'>
+                            <div class='circle_progress_outer'>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 160 160' version="1.1">
+                                    <circle id='income_circle' style='stroke-dashoffset: 420;' cx='80' cy='80' r='70' stroke-linecap="round" />
+                                    <circle id='expense_circle' style='stroke-dashoffset: 420;' cx='80' cy='80' r='70' stroke-linecap="round" />
+                                </svg>
+                            </div>
+                            <div class='circle_progress_inner'>
+                                <p id='circle_progress_balance'>{{ financialsummary.balance }} €</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class='income_expense_container'>
+                        <div class='income home_tile' style='animation-duration: 0.6s;'>
+                            <p>Incoming</p>
+                            <div style='display: inline-flex; align-items: center;'>
+                                <i class="bi bi-caret-up-fill income_expense_icon" style='color: var(--green)'></i>
+                                <span id='income'>{{ financialsummary.total_incomes }} €</span>
+                            </div>
+                        </div>
+                        <div class='expense home_tile' style='animation-duration: 0.8s;'>
+                            <p>Outgoing</p>
+                            <div style='display: inline-flex; align-items: center;'>
+                                <i class="bi bi-caret-down-fill income_expense_icon" style='color: var(--red)'></i>
+                                <span id='expense'>{{ financialsummary.total_expenses }} €</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class='recent_transactions_container home_tile' style='animation-duration: 1s;'>
+                        <p style='user-select: none;'>Recent Transactions</p>
+                        <div class='recent_transactions'>
+                            {% for t in transactions %}
+                            <div class='item' style='background-color: var(--white-gray); grid-template-columns: auto auto 1fr 1fr; pointer-events: none; box-shadow: none;'>
+                                <span class='item_index'>{{ forloop.counter }}</span>
+                                <i class="bi bi-caret-{% if t.description %}down{% else %}up{% endif %}-fill item_icon" style='background-color: var(--white-gray); color: var(--{% if t.description %}red{% else %}green{% endif %});'></i>
+                                <div>
+                                    <span class='item_title'>
+                                        {% if t.description %}
+                                            {{ t.description|capfirst }}
+                                        {% else %}
+                                            {{ t.source|capfirst }}
+                                        {% endif %}
+                                    </span><br>
+                                </div>
+                                <span class='item_sum' style='color: var(--{% if t.description %}black{% else %}green{% endif %});'>{% if t.description %}{% else %}+ {% endif %}{{ t.amount }} €<span style='color: var(--black);'> | amount</span></span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class='home_container_right'>
+                    <div class='calendar home_tile' style='animation-duration: 1.2s;'>
+                        <div class='calendar_days'>
+                            <span>M</span>
+                            <span>T</span>
+                            <span>W</span>
+                            <span>T</span>
+                            <span>F</span>
+                            <span>S</span>
+                            <span>S</span>
+                        </div>
+                        <div class='calendar_dates'>
+                            {% for d in monthdays %}
+                            {% if not d.is_current_day %}
+                                <span class='date' style="opacity: {{ d.opacity }};">{{ d.day }}</span>
+                            {% else %}
+                                <span class='date date_current' style="opacity: {{ d.opacity }};">{{ d.day }}</span>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function () {
+            const incomeCircle = document.getElementById('income_circle');
+            const expenseCircle = document.getElementById('expense_circle');
+          
+            const incomeValue = parseInt(document.getElementById('income').innerText);
+            const expenseValue = parseInt(document.getElementById('expense').innerText);
+          
+            let IncomeLength = incomeValue.toString().length - 2;
+            let divider = 5 * Math.pow(10, IncomeLength);
+            let roundedNumber = Math.ceil(incomeValue / divider) * divider;
+          
+            console.log(roundedNumber);
+            console.log(incomeValue + 2500);
+            if (incomeValue + 2500 >= roundedNumber) {
+                roundedNumber += 5000;
+            }
+
+            console.log(roundedNumber);
+          
+            let incomeCircleValue = 436 * (1 - (incomeValue / roundedNumber));
+            let expenseCircleValue = 436 * (1 - (expenseValue / roundedNumber));
+          
+            if (incomeValue > 0 || expenseValue > 0) {
+              setTimeout(() => {
+                incomeCircle.style.stroke = 'var(--green)';
+                expenseCircle.style.stroke = 'var(--red)';
+            
+                incomeCircle.style.strokeDashoffset = incomeCircleValue;
+                expenseCircle.style.strokeDashoffset = expenseCircleValue;
+              }, 700);   
+            }
+        }
+    </script>
+</body>
 {% endblock %}
